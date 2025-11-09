@@ -249,11 +249,11 @@ export default function InisiasiPage() {
       const payload = {
         kandang: formData.kandang,
         lantai: formData.lantai,
-        users: formData.users, // kirim array email user
+        users: userInfo.email, // kirim array email user
       };
 
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/inisiasi`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/inisiasi?email=${userInfo.email}`,
         payload,
         {
           headers: {

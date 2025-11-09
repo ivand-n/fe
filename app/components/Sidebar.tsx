@@ -121,8 +121,13 @@ export default function Sidebar() {
     setExpandedKandang((prev) => (prev === kandangId ? null : kandangId));
   };
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string, opts?: { exact?: boolean }) => {
+    const clean = (p: string) => p.split("?")[0].replace(/\/+$/, "");
+    const path = clean(pathname);
+    const target = clean(href);
+    if (opts?.exact) return path === target;
+    return path === target || path.startsWith(`${target}/`);
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -195,7 +200,7 @@ export default function Sidebar() {
               flex items-center gap-3 px-4 py-3 rounded-lg
               transition-all duration-200
               ${
-                isActive("/monitoring")
+                isActive("/monitoring", { exact: true })
                   ? "bg-orange-400 text-white shadow-md"
                   : "text-gray-700 hover:bg-gray-100"
               }
@@ -203,6 +208,24 @@ export default function Sidebar() {
           >
             <span className="text-xl">📊</span>
             <span className="font-medium">Dashboard</span>
+          </Link>
+
+          {/* Kandang */}
+          <Link
+            href={`/monitoring/kandang?email=${userInfo.email}`}
+            onClick={() => setIsOpen(false)}
+            className={`
+              flex items-center gap-3 px-4 py-3 rounded-lg
+              transition-all duration-200
+              ${
+                isActive("/monitoring/kandang")
+                  ? "bg-orange-400 text-white shadow-md"
+                  : "text-gray-700 hover:bg-gray-100"
+              }
+            `}
+          >
+            <span className="text-xl">🏡</span>
+            <span className="font-medium">Kandang</span>
           </Link>
 
           {/* Divider */}
