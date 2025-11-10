@@ -155,6 +155,25 @@ export default function LantaiMonitoringPage() {
     },
   ];
 
+  const HandlePanenLantai = (id_lantai: string) => {
+    if (confirm("Yakin ingin melakukan panen pada lantai ini?")) {
+      try {
+        const token =
+          localStorage.getItem("auth_token") ?? localStorage.getItem("token");
+        if (!token) {
+          alert("Token tidak ditemukan. Silakan login kembali.");
+          router.push("/login");
+          return;
+        }
+        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/csv/${kandangId}/${id_lantai}?token=${token}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        console.error("Error saat panen lantai:", err);
+        alert("Gagal melakukan panen!");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen">
@@ -233,7 +252,7 @@ export default function LantaiMonitoringPage() {
                   onClick={() =>
                     latest &&
                     router.push(
-                      `/monitoring/form/FormPenjarangan?id_kandang=${
+                      `/monitoring/form/penjarangan?id_kandang=${
                         kandang.id
                       }&id_lantai=${lantai.id}&id_monit=${
                         latest.id_monit || latest.id
@@ -252,12 +271,18 @@ export default function LantaiMonitoringPage() {
                 <button
                   onClick={() =>
                     router.push(
-                      `/monitoring/form/FormOvk?id_kandang=${kandang.id}&id_lantai=${lantai.id}`
+                      `/monitoring/form/ovk?id_kandang=${kandang.id}&id_lantai=${lantai.id}`
                     )
                   }
                   className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-medium"
                 >
                   + OVK
+                </button>
+                <button
+                  onClick={() => HandlePanenLantai(lantaiId)}
+                  className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-medium"
+                >
+                  Panen Lantai
                 </button>
               </>
             )}
@@ -385,7 +410,7 @@ export default function LantaiMonitoringPage() {
                       "gr/Ekor/Hari",
                       "Cum Kons Pakan",
                       "Karung",
-                      "BB/Ekor (Gr)",
+                      "Berat/Ekor (Gr)",
                       "DG (Gr)",
                       "ADG/PBBH",
                       "Tonase (Kg)",
@@ -546,7 +571,7 @@ export default function LantaiMonitoringPage() {
                   </thead>
                   <tbody>
                     {lantai.ovk.map((o: AnyObj, i: number) => (
-                      <tr key={o.id || i} className="hover:bg-gray-50">
+                      <tr key={o.id || i} className="hover:bg-gray-50 text-black">
                         <td className="px-2 py-1">
                           {o.date
                             ? new Intl.DateTimeFormat("id-ID", {
@@ -564,7 +589,7 @@ export default function LantaiMonitoringPage() {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/monitoring/form/FormOvk?id_kandang=${kandang.id}&id_lantai=${lantai.id}&id_ovk=${o.id}`
+                                  `/monitoring/form/ovk?id_kandang=${kandang.id}&id_lantai=${lantai.id}&id_ovk=${o.id}`
                                 )
                               }
                               className="text-xs text-yellow-600 hover:underline"
@@ -640,7 +665,7 @@ export default function LantaiMonitoringPage() {
                       const umurLatest = latest ? num(latest.umur) : null;
                       const allowDelete = umurLatest === num(p.umur);
                       return (
-                        <tr key={p.id || i} className="hover:bg-gray-50">
+                        <tr key={p.id || i} className="hover:bg-gray-50 text-black">
                           <td className="px-2 py-1">
                             {p.date
                               ? new Intl.DateTimeFormat("id-ID", {

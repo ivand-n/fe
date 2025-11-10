@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const JENIS_DOC_OPTIONS = ["Cobb", "Ross", "Hubbard", "Arbor Acres"];
+
 type Monit = {
   umur: number;
   mati: number | null;
@@ -163,15 +165,14 @@ export default function InisiasiPage() {
 
   const handleLantaiChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { id, value } = e.target;
-    const updatedLantai = [...formData.lantai];
-    updatedLantai[index] = {
-      ...updatedLantai[index],
-      [id]: id === "populasi" ? parseInt(value, 10) || null : value,
-    };
-    setFormData((prev) => ({ ...prev, lantai: updatedLantai }));
+    setFormData((prev) => {
+      const lantai = [...prev.lantai];
+      lantai[index] = { ...lantai[index], [id]: value };
+      return { ...prev, lantai };
+    });
   };
 
   const handleMonitChange = (
@@ -385,73 +386,110 @@ export default function InisiasiPage() {
             <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-800">
               Lantai
             </h2>
-            {formData.lantai.map((lantai, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 p-4 rounded-lg mb-4 bg-gray-50"
-              >
-                <h3 className="font-semibold text-gray-700 mb-3">
-                  Lantai {lantai.no_lantai}
-                </h3>
+            {formData.lantai.map((lantai, index) => {
+              const selectedJenis = JENIS_DOC_OPTIONS.includes(lantai.jenisDOC)
+                ? lantai.jenisDOC
+                : lantai.jenisDOC
+                ? "__custom__"
+                : "";
+              return (
+                <div
+                  key={index}
+                  className="border border-gray-200 p-4 rounded-lg mb-4 bg-gray-50"
+                >
+                  <h3 className="font-semibold text-gray-700 mb-3">
+                    Lantai {lantai.no_lantai}
+                  </h3>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Jenis DOC <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="jenisDOC"
-                  value={lantai.jenisDOC}
-                  onChange={(e) => handleLantaiChange(index, e)}
-                  className="border border-gray-300 text-black rounded p-2 w-full mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                  required
-                />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Jenis DOC <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="jenisDOC"
+                    value={selectedJenis}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "__custom__") {
+                        // tampilkan input custom di bawah
+                        // setShowCustomJenis(true);
+                        handleLantaiChange(index, e);
+                      } else {
+                        // setShowCustomJenis(false);
+                        handleLantaiChange(index, e);
+                      }
+                    }}
+                    className="border border-gray-300 text-black rounded p-2 w-full mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                    required
+                  >
+                    <option value="" disabled>
+                      -- Pilih Jenis DOC --
+                    </option>
+                    {JENIS_DOC_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Populasi <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="populasi"
-                  value={lantai.populasi || ""}
-                  onChange={(e) => handleLantaiChange(index, e)}
-                  className="border border-gray-300 text-black rounded p-2 w-full mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                  required
-                />
-
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tanggal Masuk <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="tgl_masuk"
-                  value={lantai.tgl_masuk}
-                  onChange={(e) => handleLantaiChange(index, e)}
-                  className="border border-gray-300 text-black rounded p-2 w-full mb-4 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                  required
-                />
-
-                {/* Form Monit */}
-                <h4 className="font-semibold text-gray-700 mb-2">
-                  Monitoring Awal
-                </h4>
-                {lantai.monit.map((monit, monitIndex) => (
-                  <div key={monitIndex} className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      BB / Ekor (kg) <span className="text-red-500">*</span>
-                    </label>
+                  {selectedJenis === "__custom__" && (
                     <input
-                      type="number"
-                      id="bb_ekor"
-                      value={monit.bb_ekor || ""}
-                      onChange={(e) => handleMonitChange(index, monitIndex, e)}
-                      className="border border-gray-300 text-black rounded p-2 w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                      step="0.01"
+                      type="text"
+                      id="jenisDOC"
+                      value={lantai.jenisDOC}
+                      onChange={(e) => handleLantaiChange(index, e)}
+                      className="border border-gray-300 text-black rounded p-2 w-full mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                      placeholder="Tuliskan jenis DOC"
                       required
                     />
-                  </div>
-                ))}
-              </div>
-            ))}
+                  )}
+
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Populasi <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="populasi"
+                    value={lantai.populasi || ""}
+                    onChange={(e) => handleLantaiChange(index, e)}
+                    className="border border-gray-300 text-black rounded p-2 w-full mb-3 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                    required
+                  />
+
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tanggal Masuk <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="tgl_masuk"
+                    value={lantai.tgl_masuk}
+                    onChange={(e) => handleLantaiChange(index, e)}
+                    className="border border-gray-300 text-black rounded p-2 w-full mb-4 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                    required
+                  />
+
+                  {/* Form Monit */}
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Monitoring Awal
+                  </h4>
+                  {lantai.monit.map((monit, monitIndex) => (
+                    <div key={monitIndex} className="mb-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Berat / Ekor (kg) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="bb_ekor"
+                        value={monit.bb_ekor || ""}
+                        onChange={(e) => handleMonitChange(index, monitIndex, e)}
+                        className="border border-gray-300 text-black rounded p-2 w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
+                        step="0.01"
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
 
             <button
               type="button"

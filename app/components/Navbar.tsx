@@ -26,19 +26,19 @@ export default function Navbar() {
 
           <div className="justify-self-center inline-flex space-x-2">
             <a
-              href="#home"
+              href="/"
               className="px-4 py-2 rounded-md text-black font-bold hover:text-gray-600 focus:outline-none focus:ring-2"
             >
               Home
             </a>
             <a
-              href="#produk"
+              href="/#produk"
               className="px-4 py-2 rounded-md text-black font-bold hover:text-gray-600 focus:outline-none focus:ring-2"
             >
               Produk
             </a>
             <a
-              href="#tentang-kami"
+              href="/#tentang-kami"
               className="px-4 py-2 rounded-md text-black font-bold hover:text-gray-600 focus:outline-none focus:ring-2"
             >
               Tentang Kami

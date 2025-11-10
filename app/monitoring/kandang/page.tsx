@@ -6,6 +6,7 @@ import Sidebar from "@/app/components/Sidebar";
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
+import { refresh } from "next/cache";
 
 type AnyObj = any;
 
@@ -27,6 +28,7 @@ type UserInfo = {
 const num = (v: any): number => {
   if (v == null) return 0;
   if (typeof v === "number") return v;
+  if (typeof v === "boolean") return v ? 1 : 0; // <<< tambahkan ini
   if (typeof v === "string") {
     const n = parseFloat(v);
     return Number.isFinite(n) ? n : 0;
@@ -38,6 +40,11 @@ const num = (v: any): number => {
     if (typeof v.Float64 === "string") return parseFloat(v.Float64) || 0;
   }
   return 0;
+};
+
+const normalizeStatus = (s: any) => {
+  if (typeof s === "boolean") return s ? 1 : 0;
+  return num(s);
 };
 
 const latestByUmur = (arr: AnyObj[]) =>
@@ -58,6 +65,7 @@ export default function KandangPage() {
   });
   const [data, setData] = useState<Kandang[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // trigger refetch setelah panen
 
   // Alert state
   const [showAlert, setShowAlert] = useState(false);
@@ -117,16 +125,43 @@ export default function KandangPage() {
         setData([]);
       })
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router, refreshTrigger]); // tambahkan refreshTrigger
+
+  // pindahkan fungsi panen ke dalam komponen (hapus versi di luar komponen)
+  const handlePanenKandang = (id_kandang: number) => {
+    if (
+      !confirm(
+        "Yakin ingin melakukan panen pada kandang ini? Kandang akan ditandai sebagai panen dan tidak bisa diubah lagi!"
+      )
+    ) {
+      return;
+    }
+    try {
+      const token =
+        localStorage.getItem("auth_token") ?? localStorage.getItem("token");
+      if (!token) {
+        alert("Token tidak ditemukan. Silakan login kembali.");
+        router.push("/login");
+        return;
+      }
+      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/csv/${id_kandang}?token=${token}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      // paksa refetch data setelah CSV dibuka
+      setTimeout(() => setRefreshTrigger((n) => n + 1), 300);
+    } catch (err) {
+      console.error("Panen kandang error:", err);
+      alert("Gagal melakukan panen!");
+    }
+  };
 
   console.log("Kandang data:", data);
   const totalKandang = data ? data.length : 0;
   const statusLabel = (s: number | null) =>
-    num(s) === 0 ? "Aktif" : num(s) === 1 ? "Panen" : "—";
+    normalizeStatus(s) === 0 ? "Aktif" : normalizeStatus(s) === 1 ? "Panen" : "—";
   const statusColor = (s: number | null) =>
-    num(s) === 0
+    normalizeStatus(s) === 0
       ? "bg-green-500"
-      : num(s) === 1
+      : normalizeStatus(s) === 1
       ? "bg-amber-500"
       : "bg-gray-400";
 
@@ -362,10 +397,18 @@ export default function KandangPage() {
                     >
                       Hapus Kandang
                     </button>
+                    <button
+                      onClick={() => handlePanenKandang(k.id)}
+                      className="flex-1 min-w-[110px] text-center px-3 py-2 rounded bg-green-500 hover:bg-green-600 text-white text-xs font-medium"
+                      disabled={normalizeStatus(k.status) !== 0}
+                      title={normalizeStatus(k.status) === 0 ? "Panen kandang" : "Kandang sudah panen"}
+                    >
+                      Panen
+                    </button>
                   </div>
 
                   {/* Aksi lantai (hanya saat status aktif) */}
-                  {num(k.status) === 0 && (
+                  {normalizeStatus(k.status) === 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         href={`/monitoring/form/lantai?tambah=1&id_kandang=${k.id}`}

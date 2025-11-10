@@ -330,14 +330,14 @@ export default function Sidebar() {
             ))}
 
           {/* Divider */}
-          <div className="pt-2 pb-1">
+          {/* <div className="pt-2 pb-1">
             <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Penjualan
             </p>
-          </div>
+          </div> */}
 
           {/* Penjualan */}
-          <Link
+          {/* <Link
             href="/penjualan"
             onClick={() => setIsOpen(false)}
             className={`
@@ -352,17 +352,17 @@ export default function Sidebar() {
           >
             <span className="text-xl">📝</span>
             <span className="font-medium">Penjualan</span>
-          </Link>
+          </Link> */}
 
           {/* Divider */}
-          <div className="pt-2 pb-1">
+          {/* <div className="pt-2 pb-1">
             <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Arsip Data
             </p>
-          </div>
+          </div> */}
 
           {/* Arsip Data */}
-          <Link
+          {/* <Link
             href="/arsip-data"
             onClick={() => setIsOpen(false)}
             className={`
@@ -377,7 +377,7 @@ export default function Sidebar() {
           >
             <span className="text-xl">📦</span>
             <span className="font-medium">Arsip Data</span>
-          </Link>
+          </Link> */}
         </nav>
 
         {/* Footer/User section */}

@@ -190,7 +190,7 @@ export default function FormMonitoringPage() {
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
-      <div className="flex-1 p-6 md:p-8">
+      <div className="flex-1 p-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
           <div>
