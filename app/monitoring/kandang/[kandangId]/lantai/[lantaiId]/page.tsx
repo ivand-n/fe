@@ -38,6 +38,7 @@ export default function LantaiMonitoringPage() {
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
   const [selectedMetric, setSelectedMetric] = useState<string>("sisa_ayam");
   const [showInfo, setShowInfo] = useState(false);
+  const [prediksi, setPrediksi] = useState<{ fcr?: number[] }>({});
 
   const metricOptions = [
     { value: "sisa_ayam", label: "Sisa Ayam" },
@@ -173,6 +174,44 @@ export default function LantaiMonitoringPage() {
       }
     }
   };
+
+  // ...existing code...
+
+  // useEffect(() => {
+  //     if (!lantai || !Array.isArray(lantai.monit) || lantai.monit.length === 0) {
+  //       console.warn("No monitoring data available for prediction");
+  //       return;
+  //     }
+
+  //     const payload = {
+  //       items: lantai.monit.map((m: AnyObj) => ({
+  //         umur: num(m.umur),
+  //         deplesi_persen: num(m.deplesi_persen),
+  //         dh: num(m.dh),
+  //         cums_kons_pakan: num(m.cum_kons_pakan), // ⚠️ Pastikan nama field benar
+  //         bb_ekor: num(m.bb_ekor),
+  //         adg_pbbh: num(m.adg_pbbh),
+  //       })),
+  //     };
+
+  //     console.log("Sending prediction request:", payload);
+
+  //     const mlUrl = process.env.NEXT_PUBLIC_API_ML_URL || "http://localhost:8001";
+
+  //     axios
+  //       .post(`${mlUrl}/predict`, payload)
+  //       .then((res) => {
+  //         console.log("Prediction response:", res.data);
+  //         setPrediksi(res.data);
+  //       })
+  //       .catch((err) => {
+  //         console.error("Prediction error:", err.response?.data || err.message);
+  //         // Tetap tampilkan UI meskipun prediksi gagal
+  //         setPrediksi({});
+  //       });
+  // }, [lantai]);
+
+  // ...existing code...
 
   if (loading) {
     return (
@@ -491,6 +530,11 @@ export default function LantaiMonitoringPage() {
                         <td className="px-2 py-1 border-b">
                           {num(m.ep).toFixed(2)}
                         </td>
+                        {/* <td className="px-2 py-1 border-b">
+                          {prediksi.fcr && prediksi.fcr[idx] != null
+                            ? prediksi.fcr[idx].toFixed(2)
+                            : "-"}
+                        </td> */}
                         {isActive && (
                           <td className="px-2 py-1 border-b">
                             {isLatest && monit.length > 1 && (
@@ -571,7 +615,10 @@ export default function LantaiMonitoringPage() {
                   </thead>
                   <tbody>
                     {lantai.ovk.map((o: AnyObj, i: number) => (
-                      <tr key={o.id || i} className="hover:bg-gray-50 text-black">
+                      <tr
+                        key={o.id || i}
+                        className="hover:bg-gray-50 text-black"
+                      >
                         <td className="px-2 py-1">
                           {o.date
                             ? new Intl.DateTimeFormat("id-ID", {
@@ -665,7 +712,10 @@ export default function LantaiMonitoringPage() {
                       const umurLatest = latest ? num(latest.umur) : null;
                       const allowDelete = umurLatest === num(p.umur);
                       return (
-                        <tr key={p.id || i} className="hover:bg-gray-50 text-black">
+                        <tr
+                          key={p.id || i}
+                          className="hover:bg-gray-50 text-black"
+                        >
                           <td className="px-2 py-1">
                             {p.date
                               ? new Intl.DateTimeFormat("id-ID", {
