@@ -2,6 +2,9 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -13,18 +16,15 @@ export default function CallbackPage() {
     const picture = searchParams.get("picture");
 
     if (token) {
-      // Simpan token ke localStorage atau cookie
-      const expirationTime = Date.now() + 6 * 60 * 60 * 1000; // 6 jam
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_name", name || "");
-        localStorage.setItem("user_email", email || "");
-        localStorage.setItem("user_picture", picture || "");
-        localStorage.setItem("token_expiration", expirationTime.toString());
+      const expirationTime = Date.now() + 6 * 60 * 60 * 1000;
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_name", name || "");
+      localStorage.setItem("user_email", email || "");
+      localStorage.setItem("user_picture", picture || "");
+      localStorage.setItem("token_expiration", expirationTime.toString());
 
-      // Redirect ke dashboard/monitoring setelah simpan token
       router.push("/monitoring");
     } else {
-      // Jika tidak ada token, redirect ke login
       router.push("/login");
     }
   }, [searchParams, router]);
