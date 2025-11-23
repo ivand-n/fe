@@ -1,11 +1,8 @@
 "use client";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -16,15 +13,18 @@ export default function CallbackPage() {
     const picture = searchParams.get("picture");
 
     if (token) {
-      const expirationTime = Date.now() + 6 * 60 * 60 * 1000;
+      // Simpan token ke localStorage
+      const expirationTime = Date.now() + 6 * 60 * 60 * 1000; // 6 jam
       localStorage.setItem("auth_token", token);
       localStorage.setItem("user_name", name || "");
       localStorage.setItem("user_email", email || "");
       localStorage.setItem("user_picture", picture || "");
       localStorage.setItem("token_expiration", expirationTime.toString());
 
+      // Redirect ke dashboard
       router.push("/monitoring");
     } else {
+      // Jika tidak ada token, redirect ke login
       router.push("/login");
     }
   }, [searchParams, router]);
@@ -36,5 +36,22 @@ export default function CallbackPage() {
         <p className="mt-4 text-gray-600">Memproses login...</p>
       </div>
     </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-400 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CallbackContent />
+    </Suspense>
   );
 }
