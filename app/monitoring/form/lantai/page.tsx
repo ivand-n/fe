@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react"; // Tambahkan Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import axios from "axios";
@@ -13,7 +13,7 @@ type FormData = {
   kandang_id: number | null;
 };
 
-export default function FormLantaiPage() {
+function FormLantaiContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -428,5 +428,22 @@ export default function FormLantaiPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FormLantaiPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen bg-white">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Memuat form...
+          </div>
+        </div>
+      }
+    >
+      <FormLantaiContent />
+    </Suspense>
   );
 }
