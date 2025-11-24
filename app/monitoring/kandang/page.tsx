@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import Image from "next/image";
@@ -54,7 +54,7 @@ const latestByUmur = (arr: AnyObj[]) =>
     null as AnyObj | null
   );
 
-export default function KandangPage() {
+function KandangContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -166,8 +166,6 @@ export default function KandangPage() {
       : "bg-gray-400";
 
   const totalLantai = (k: Kandang) => (k.lantai || []).length;
-
-  // Empty / loading states
   if (loading) {
     return (
       <div className="flex flex-col md:flex-row bg-white min-h-svh">
@@ -401,7 +399,11 @@ export default function KandangPage() {
                       onClick={() => handlePanenKandang(k.id)}
                       className="flex-1 min-w-[110px] text-center px-3 py-2 rounded bg-green-500 hover:bg-green-600 text-white text-xs font-medium"
                       disabled={normalizeStatus(k.status) !== 0}
-                      title={normalizeStatus(k.status) === 0 ? "Panen kandang" : "Kandang sudah panen"}
+                      title={
+                        normalizeStatus(k.status) === 0
+                          ? "Panen kandang"
+                          : "Kandang sudah panen"
+                      }
                     >
                       Panen
                     </button>
@@ -444,4 +446,11 @@ export default function KandangPage() {
       </div>
     </div>
   );
+}
+export default function KandangPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <KandangContent />
+    </Suspense>
+  )
 }

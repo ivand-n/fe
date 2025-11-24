@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/app/components/Sidebar";
 import axios from "axios";
 import { Line } from "react-chartjs-2";
@@ -25,7 +25,7 @@ const num = (v: any): number => {
   return 0;
 };
 
-export default function LantaiMonitoringPage() {
+function LantaiMonitoringPageContent() {
   const { kandangId, lantaiId } = useParams() as {
     kandangId: string;
     lantaiId: string;
@@ -177,42 +177,39 @@ export default function LantaiMonitoringPage() {
 
   // ...existing code...
 
-  // useEffect(() => {
-  //     if (!lantai || !Array.isArray(lantai.monit) || lantai.monit.length === 0) {
-  //       console.warn("No monitoring data available for prediction");
-  //       return;
-  //     }
+  useEffect(() => {
+    if (!lantai || !Array.isArray(lantai.monit) || lantai.monit.length === 0) {
+      console.warn("No monitoring data available for prediction");
+      return;
+    }
 
-  //     const payload = {
-  //       items: lantai.monit.map((m: AnyObj) => ({
-  //         umur: num(m.umur),
-  //         deplesi_persen: num(m.deplesi_persen),
-  //         dh: num(m.dh),
-  //         cums_kons_pakan: num(m.cum_kons_pakan), // ⚠️ Pastikan nama field benar
-  //         bb_ekor: num(m.bb_ekor),
-  //         adg_pbbh: num(m.adg_pbbh),
-  //       })),
-  //     };
+    const payload = {
+      items: lantai.monit.map((m: AnyObj) => ({
+        umur: num(m.umur),
+        deplesi_persen: num(m.deplesi_persen),
+        dh: num(m.dh),
+        cums_kons_pakan: num(m.cum_kons_pakan), // ⚠️ Pastikan nama field benar
+        bb_ekor: num(m.bb_ekor),
+        adg_pbbh: num(m.adg_pbbh),
+      })),
+    };
 
-  //     console.log("Sending prediction request:", payload);
+    console.log("Sending prediction request:", payload);
 
-  //     const mlUrl = process.env.NEXT_PUBLIC_API_ML_URL || "http://localhost:8001";
+    const mlUrl = process.env.NEXT_PUBLIC_API_ML_URL || "http://localhost:8001";
 
-  //     axios
-  //       .post(`${mlUrl}/predict`, payload)
-  //       .then((res) => {
-  //         console.log("Prediction response:", res.data);
-  //         setPrediksi(res.data);
-  //       })
-  //       .catch((err) => {
-  //         console.error("Prediction error:", err.response?.data || err.message);
-  //         // Tetap tampilkan UI meskipun prediksi gagal
-  //         setPrediksi({});
-  //       });
-  // }, [lantai]);
-
-  // ...existing code...
-
+    axios
+      .post(`${mlUrl}/predict`, payload)
+      .then((res) => {
+        console.log("Prediction response:", res.data);
+        setPrediksi(res.data);
+      })
+      .catch((err) => {
+        console.error("Prediction error:", err.response?.data || err.message);
+        // Tetap tampilkan UI meskipun prediksi gagal
+        setPrediksi({});
+      });
+  }, [lantai]);
   if (loading) {
     return (
       <div className="flex min-h-screen">
@@ -530,11 +527,11 @@ export default function LantaiMonitoringPage() {
                         <td className="px-2 py-1 border-b">
                           {num(m.ep).toFixed(2)}
                         </td>
-                        {/* <td className="px-2 py-1 border-b">
+                        <td className="px-2 py-1 border-b">
                           {prediksi.fcr && prediksi.fcr[idx] != null
                             ? prediksi.fcr[idx].toFixed(2)
                             : "-"}
-                        </td> */}
+                        </td>
                         {isActive && (
                           <td className="px-2 py-1 border-b">
                             {isLatest && monit.length > 1 && (
@@ -825,4 +822,11 @@ export default function LantaiMonitoringPage() {
       )}
     </div>
   );
+}
+export default function LantaiMonitoringPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LantaiMonitoringPageContent />
+    </Suspense>
+  )
 }
