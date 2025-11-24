@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import axios from "axios";
@@ -15,7 +15,7 @@ type FormData = {
   id_lantai: number | null;
 };
 
-export default function FormPenjaranganPage() {
+function FormPenjaranganContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -174,7 +174,6 @@ export default function FormPenjaranganPage() {
       </div>
     );
   }
-
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
@@ -374,5 +373,12 @@ export default function FormPenjaranganPage() {
         </div>
       </div>
     </div>
+  )
+}
+export default function FormPenjaranganPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FormPenjaranganContent />
+    </Suspense>
   );
 }

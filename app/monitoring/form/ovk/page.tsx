@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import axios from "axios";
@@ -13,7 +13,7 @@ type FormData = {
   id_lantai: number | null;
 };
 
-export default function FormOvkPage() {
+function FormOvkContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -75,12 +75,9 @@ export default function FormOvkPage() {
     if (id_ovk) {
       setInitialLoading(true);
       axios
-        .get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ovk/${id_ovk}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+        .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ovk/${id_ovk}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((res) => {
           const data = res.data;
           setFormData({
@@ -91,14 +88,15 @@ export default function FormOvkPage() {
             id_lantai: parseInt(id_lantai, 10),
           });
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error("Error fetching OVK:", err);
           alert("Gagal mengambil data OVK.");
         })
         .finally(() => setInitialLoading(false));
     } else {
       setInitialLoading(false);
     }
-  }, [id_lantai, id_ovk, id_kandang, router]);
+  }, [id_lantai, id_ovk, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -114,6 +112,22 @@ export default function FormOvkPage() {
     e.preventDefault();
     if (loading) return;
 
+    // Validasi
+    if (
+      !formData.nama ||
+      !formData.jenis ||
+      !formData.dosis ||
+      !formData.jenis_dosis
+    ) {
+      alert("Semua field harus diisi!");
+      return;
+    }
+
+    if (!id_kandang || !id_lantai) {
+      alert("ID kandang/lantai tidak valid.");
+      return;
+    }
+
     const token =
       localStorage.getItem("auth_token") ?? localStorage.getItem("token");
     if (!token) {
@@ -121,7 +135,6 @@ export default function FormOvkPage() {
       router.push("/login");
       return;
     }
-    console.log("Submitting form data:", formData);
 
     setLoading(true);
     try {
@@ -145,9 +158,11 @@ export default function FormOvkPage() {
           id_ovk ? "editovk" : "tambahovk"
         }`
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert("Terjadi kesalahan saat menyimpan data.");
+      alert(
+        error.response?.data?.error || "Terjadi kesalahan saat menyimpan data."
+      );
     } finally {
       setLoading(false);
     }
@@ -157,8 +172,11 @@ export default function FormOvkPage() {
     return (
       <div className="flex min-h-screen bg-white">
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          Memuat form...
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-400 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600">Memuat form...</p>
+          </div>
         </div>
       </div>
     );
@@ -202,7 +220,7 @@ export default function FormOvkPage() {
                 id="nama"
                 value={formData.nama}
                 onChange={handleInputChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 required
                 placeholder="Contoh: ND Lasota"
               />
@@ -219,7 +237,7 @@ export default function FormOvkPage() {
                 id="jenis"
                 value={formData.jenis}
                 onChange={handleInputChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 required
               >
                 <option value="">-- Pilih Jenis --</option>
@@ -242,7 +260,7 @@ export default function FormOvkPage() {
                 id="dosis"
                 value={formData.dosis ?? ""}
                 onChange={handleInputChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 required
                 min={0}
                 placeholder="Contoh: 500"
@@ -261,7 +279,7 @@ export default function FormOvkPage() {
                 id="jenis_dosis"
                 value={formData.jenis_dosis}
                 onChange={handleInputChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400 focus:outline-none"
                 required
                 placeholder="Contoh: ml, gram, ekor"
               />
@@ -271,7 +289,7 @@ export default function FormOvkPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-5 py-2 rounded text-sm font-medium text-white ${
+                className={`px-5 py-2 rounded text-sm font-medium text-white transition-colors ${
                   loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
@@ -290,7 +308,7 @@ export default function FormOvkPage() {
                     `/monitoring/kandang/${id_kandang}/lantai/${id_lantai}`
                   )
                 }
-                className="px-5 py-2 rounded text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700"
+                className="px-5 py-2 rounded text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
               >
                 Batal
               </button>
@@ -299,16 +317,47 @@ export default function FormOvkPage() {
         </div>
 
         {/* Tips */}
-        <div className="mt-6 text-xs text-gray-500 max-w-xl leading-relaxed">
-          <p className="font-medium mb-1">Panduan pengisian:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Nama OVK: Sesuai merek/jenis produk (ND, IB, Gumboro, dll)</li>
-            <li>Jenis: Vaksin, Obat, atau Vitamin</li>
-            <li>Dosis: Jumlah yang digunakan (bisa desimal)</li>
-            <li>Satuan: ml, gram, ekor, liter, dll</li>
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-xl">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">
+            💡 Panduan Pengisian:
+          </h3>
+          <ul className="text-xs text-blue-700 space-y-1 leading-relaxed">
+            <li>
+              • <strong>Nama OVK:</strong> Sesuai merek/jenis produk (ND, IB,
+              Gumboro, dll)
+            </li>
+            <li>
+              • <strong>Jenis:</strong> Pilih Vaksin, Obat, atau Vitamin
+            </li>
+            <li>
+              • <strong>Dosis:</strong> Jumlah yang digunakan (bisa desimal)
+            </li>
+            <li>
+              • <strong>Satuan:</strong> ml, gram, ekor, liter, dll
+            </li>
           </ul>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FormOvkPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen bg-white">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-400 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Memuat...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <FormOvkContent />
+    </Suspense>
   );
 }

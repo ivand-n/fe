@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import Sidebar from "@/app/components/Sidebar";
 import axios from "axios";
 
@@ -29,7 +29,7 @@ const num = (v: any): number => {
   return 0;
 };
 
-export default function FormMonitoringPage() {
+function FormMonitoringContent() {
   const sp = useSearchParams();
   const router = useRouter();
 
@@ -68,6 +68,8 @@ export default function FormMonitoringPage() {
     }
 
     if (!id_lantai) {
+      alert("ID lantai tidak ditemukan.");
+      router.push("/monitoring");
       setInitialLoading(false);
       return;
     }
@@ -98,7 +100,8 @@ export default function FormMonitoringPage() {
           bb_ekor: data?.bb_ekor ?? null,
           id_lantai: parseInt(id_lantai, 10),
         });
-      } catch {
+      } catch (err) {
+        console.error("Error fetching monitoring data:", err);
         alert("Gagal memuat data monitoring.");
       } finally {
         setInitialLoading(false);
@@ -116,9 +119,9 @@ export default function FormMonitoringPage() {
       [id]:
         value === ""
           ? null
-          : id === "bb_ekor"
+          : id === "bb_ekor" || id === "konsumsi"
           ? parseFloat(value)
-          : ["mati", "culing", "konsumsi", "umur"].includes(id)
+          : ["mati", "culing", "umur"].includes(id)
           ? parseInt(value, 10)
           : value,
     }));
@@ -139,6 +142,17 @@ export default function FormMonitoringPage() {
       return;
     }
 
+    // Validasi input
+    if (
+      formData.mati === null ||
+      formData.culing === null ||
+      formData.konsumsi === null ||
+      formData.bb_ekor === null
+    ) {
+      alert("Semua field harus diisi!");
+      return;
+    }
+
     setLoading(true);
     try {
       const token =
@@ -150,12 +164,14 @@ export default function FormMonitoringPage() {
       }
 
       if (id_monit) {
+        // Update existing monitoring
         await axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/data/${formData.id_lantai}/${id_monit}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
+        // Create new monitoring
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/data/${formData.id_lantai}`,
           formData,
@@ -168,9 +184,9 @@ export default function FormMonitoringPage() {
           id_monit ? "ubah" : "tambah"
         }`
       );
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menyimpan data.");
+    } catch (err: any) {
+      console.error("Error saving monitoring:", err);
+      alert(err.response?.data?.error || "Gagal menyimpan data.");
     } finally {
       setLoading(false);
     }
@@ -180,8 +196,11 @@ export default function FormMonitoringPage() {
     return (
       <div className="flex min-h-screen bg-white">
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          Memuat form...
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-400 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600">Memuat form...</p>
+          </div>
         </div>
       </div>
     );
@@ -195,7 +214,7 @@ export default function FormMonitoringPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              {id_monit ? `Ubah Monitoring` : `Tambah Monitoring`}
+              {id_monit ? "Ubah Monitoring" : "Tambah Monitoring"}
             </h1>
             <p className="text-sm text-gray-500">
               Lantai: <span className="font-medium">{id_lantai}</span> •
@@ -225,37 +244,45 @@ export default function FormMonitoringPage() {
                   disabled
                   className="w-full rounded border bg-gray-100 px-3 py-2 text-sm text-gray-700 cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Umur tidak dapat diubah saat edit
+                </p>
               </div>
             )}
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Mati
+                Mati <span className="text-red-500">*</span>
               </label>
               <input
                 id="mati"
                 type="number"
                 value={formData.mati ?? ""}
                 onChange={handleChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
                 min={0}
+                required
               />
             </div>
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Culing
+                Culing <span className="text-red-500">*</span>
               </label>
               <input
                 id="culing"
                 type="number"
                 value={formData.culing ?? ""}
                 onChange={handleChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
                 min={0}
+                required
               />
             </div>
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Konsumsi (Kg)
+                Konsumsi (Kg) <span className="text-red-500">*</span>
               </label>
               <input
                 id="konsumsi"
@@ -263,13 +290,15 @@ export default function FormMonitoringPage() {
                 step="0.01"
                 value={formData.konsumsi ?? ""}
                 onChange={handleChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
                 min={0}
+                required
               />
             </div>
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Berat / Ekor (Gr)
+                Berat / Ekor (Gr) <span className="text-red-500">*</span>
               </label>
               <input
                 id="bb_ekor"
@@ -277,8 +306,9 @@ export default function FormMonitoringPage() {
                 step="0.01"
                 value={formData.bb_ekor ?? ""}
                 onChange={handleChange}
-                className="w-full rounded border px-3 py-2 text-sm text-black"
+                className="w-full rounded border px-3 py-2 text-sm text-black focus:ring-2 focus:ring-orange-400"
                 min={0}
+                required
               />
             </div>
 
@@ -286,7 +316,7 @@ export default function FormMonitoringPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-5 py-2 rounded text-sm font-medium text-white ${
+                className={`px-5 py-2 rounded text-sm font-medium text-white transition-colors ${
                   loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
@@ -305,7 +335,7 @@ export default function FormMonitoringPage() {
                     `/monitoring/kandang/${id_kandang}/lantai/${id_lantai}`
                   )
                 }
-                className="px-5 py-2 rounded text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700"
+                className="px-5 py-2 rounded text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
               >
                 Batal
               </button>
@@ -314,11 +344,36 @@ export default function FormMonitoringPage() {
         </div>
 
         {/* Tips */}
-        <div className="mt-6 text-xs text-gray-500 max-w-xl leading-relaxed">
-          Pastikan nilai konsumsi dan BB/Ekor akurat. Umur otomatis atau
-          mengikuti record sebelumnya (saat tambah).
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-xl">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">💡 Tips:</h3>
+          <ul className="text-xs text-blue-700 space-y-1 leading-relaxed">
+            <li>• Pastikan nilai konsumsi dan BB/Ekor akurat</li>
+            <li>• Umur akan otomatis terisi saat menambah data baru</li>
+            <li>• Saat edit, umur tidak dapat diubah</li>
+            <li>• Field bertanda * wajib diisi</li>
+          </ul>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FormMonitoringPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen bg-white">
+          <Sidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-400 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Memuat...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <FormMonitoringContent />
+    </Suspense>
   );
 }
